@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outfit AI - Análisis Avanzado de Imagen</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Plotly.js para 3D -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 25%, #24243e 50%, #1e3c72 75%, #2a5298 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            animation: gradientShift 10s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background: linear-gradient(135deg, #0f0c29 0%, #302b63 25%, #24243e 50%, #1e3c72 75%, #2a5298 100%); }
+            25% { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #0f0c29 50%, #302b63 75%, #24243e 100%); }
+            50% { background: linear-gradient(135deg, #24243e 0%, #0f0c29 25%, #2a5298 50%, #1e3c72 75%, #302b63 100%); }
+            75% { background: linear-gradient(135deg, #302b63 0%, #24243e 25%, #1e3c72 50%, #2a5298 75%, #0f0c29 100%); }
+            100% { background: linear-gradient(135deg, #0f0c29 0%, #302b63 25%, #24243e 50%, #1e3c72 75%, #2a5298 100%); }
+        }
+        
+        .main-container {
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-zone {
+            border: 3px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-zone:hover {
+            border-color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .upload-zone.dragover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        /* Estilos para las cards separadas */
+        .h-100 {
+            height: 100%;
+        }
+        
+        .card.h-100 .card-body {
+            min-height: 300px;
+        }
+        
+        .card.h-100:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card {
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .results-container {
+            display: none;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 0.5rem;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-left: 5px solid transparent;
+            background-image: 
+                linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%),
+                linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            margin: 1rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1rem;
+        }
+        
+        .outfit-recommendation {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .outfit-recommendation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        .outfit-recommendation:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .outfit-recommendation h5 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .outfit-recommendation .badge {
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .outfit-recommendation .badge:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, rgba(102, 126, 234, 1), rgba(118, 75, 162, 1));
+        }
+        
+        .outfit-pieces {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .outfit-pieces h6 {
+            color: #00ff88;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .outfit-pieces h6::before {
+            content: '👕';
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .outfit-pieces ul li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .outfit-pieces ul li:last-child {
+            border-bottom: none;
+        }
+        
+        .outfit-pieces ul li::before {
+            content: '✨';
+            margin-right: 10px;
+        }
+        
+        .color-harmony-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 200, 100, 0.2));
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        
+        .color-harmony-badge::before {
+            content: '🎨';
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 8px 8px 0;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+        
+        .color-swatch::after {
+            content: attr(title);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .color-swatch:hover::after {
+            opacity: 1;
+        }
+        
+        .color-palette-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .color-palette-section h6 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .color-palette-section h6::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        .processing-step {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .processing-step.completed {
+            background: rgba(40, 167, 69, 0.2);
+        }
+        
+        .processing-step i {
+            margin-right: 1rem;
+            width: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 0 10px 10px 10px;
+            padding: 2rem;
+        }
+        
+        #statisticsTable {
+            font-size: 0.9rem;
+        }
+        
+        #statisticsTable th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .alert-processing {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.5rem !important;
+            background: linear-gradient(45deg, #00ff88, #00d4ff, #ff6b6b, #ffd93d);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientText 4s ease infinite;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            font-weight: 700;
+        }
+        
+        @keyframes gradientText {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .main-title {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Efecto de partículas animadas */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6) !important;
+        }
+        
+        /* Stage Gallery Styles */
+        .stage-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #007bff;
+        }
+        
+        .stage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stage-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .stage-number {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .stage-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        
+        .stage-image-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stage-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .stage-stats {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .stage-stats table {
+            width: 100%;
+            margin: 0;
+        }
+        
+        .stage-stats td {
+            padding: 0.25rem 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .stage-stats td:first-child {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .stage-stats td:last-child {
+            text-align: right;
+            color: #007bff;
+            font-family: monospace;
+        }
+            border: none;
+        }
+        
+        /* Camera Modal Styles */
+        #cameraStream {
+            max-width: 100%;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+        }
+        
+        #captureCanvas {
+            border: 2px solid #28a745;
+        }
+        
+        .camera-controls {
+            margin-top: 1rem;
+        }
+        
+        #cameraStatus {
+            color: #666;
+        }
+        
+        .modal-body {
+            min-height: 500px;
+            padding: 2rem;
+        }
+        
+        /* Estilos del Modal de Cámara */
+        #cameraModal .modal-dialog {
+            max-width: 900px;
+            width: 90%;
+        }
+        
+        #cameraModal .modal-content {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.98) 0%, rgba(118, 75, 162, 0.98) 100%);
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+        
+        #cameraModal .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #cameraModal .modal-title {
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        #cameraModal .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+        
+        #cameraModal .btn-close:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+        
+        #cameraModal .modal-body {
+            padding: 2rem;
+            padding-bottom: 3rem;
+            color: white;
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Estilo del scrollbar para el modal */
+        #cameraModal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #cameraModal .modal-body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        #cameraModal .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        
+        #cameraModal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        #cameraModal .modal-footer {
+            padding: 1.5rem 2rem;
+            gap: 0.75rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        
+        #cameraModal .modal-footer .btn {
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        #cameraModal .modal-footer .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        #cameraModal .modal-footer .btn-secondary {
+            background: rgba(108, 117, 125, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        #cameraModal .modal-footer .btn-primary {
+            background: rgba(13, 110, 253, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        #cameraModal .modal-footer .btn-success {
+            background: rgba(25, 135, 84, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        #cameraModal .modal-footer .btn-warning {
+            background: rgba(255, 193, 7, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #333;
+        }
+        
+        #cameraView, #capturedView {
+            height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        #cameraStream, #captureCanvas {
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+            border-radius: 12px;
+            object-fit: contain;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            cursor: grab;
+        }
+        
+        /* Responsive para modal de cámara en dispositivos móviles */
+        @media (max-width: 768px) {
+            #cameraView, #capturedView {
+                height: 280px;
+                margin-bottom: 1rem;
+            }
+            
+            #cameraModal .modal-body {
+                padding: 1.5rem;
+                padding-bottom: 2rem;
+            }
+            
+            #cameraModal .modal-footer {
+                padding: 1rem 1.5rem;
+            }
+            
+            #cameraModal .modal-footer .btn {
+                min-width: 120px;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════ */
+        /* RECOMMENDATIONS TAB - DISEÑO MODERNO E INNOVADOR */
+        /* ═══════════════════════════════════════════════════════════ */
+        
+        /* Header de Recomendaciones */
+        .recommendations-header {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        }
+        
+        .recommendations-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .recommendations-header-content {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            z-index: 1;
+        }
+        
+        .header-icon-container {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .header-text {
+            flex: 1;
+        }
+        
+        .recommendations-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .recommendations-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 400;
+        }
+        
+        .recommendations-header-decoration {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        /* Grid de Outfits */
+        .outfits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Outfit Card */
+        .outfit-card {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        
+        .outfit-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        .outfit-card-header {
+            position: relative;
+            padding: 2rem;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .outfit-card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            z-index: 0;
+        }
+        
+        .outfit-card-header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .outfit-style-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .outfit-card-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .outfit-card-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.95;
+            margin: 0;
+        }
+        
+        .outfit-card-body {
+            padding: 2rem;
+            background: white;
+        }
+        
+        .outfit-pieces-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .outfit-pieces-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .outfit-piece-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 12px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .outfit-piece-item:hover {
+            border-left-color: #667eea;
+            transform: translateX(5px);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        .piece-color-swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .piece-color-swatch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .outfit-piece-item:hover .piece-color-swatch::after {
+            left: 100%;
+        }
+        
+        .piece-info {
+            flex: 1;
+        }
+        
+        .piece-type {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        .piece-description {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .outfit-card-footer {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .color-harmony-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            font-size: 0.95rem;
+        }
+        
+        .color-harmony-badge::before {
+            content: '✨';
+            font-size: 1.2rem;
+        }
+        
+        /* Style Tips Section */
+        .style-tips-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            margin-top: 3rem;
+        }
+        
+        .style-tips-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .style-tips-header i {
+            font-size: 2.5rem;
+            color: #ffc107;
+            filter: drop-shadow(0 4px 10px rgba(255, 193, 7, 0.3));
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .style-tips-header h3 {
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .style-tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .style-tip-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .style-tip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: inherit;
+            transition: width 0.3s ease;
+        }
+        
+        .style-tip-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .style-tip-card:hover::before {
+            width: 100%;
+            opacity: 0.05;
+        }
+        
+        .style-tip-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .style-tip-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .style-tip-text {
+            flex: 1;
+            color: #555;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        /* Colores para diferentes tips */
+        .style-tip-card:nth-child(5n+1) {
+            border-left-color: #667eea;
+        }
+        
+        .style-tip-card:nth-child(5n+1) .style-tip-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .style-tip-card:nth-child(5n+2) {
+            border-left-color: #f093fb;
+        }
+        
+        .style-tip-card:nth-child(5n+2) .style-tip-icon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        
+        .style-tip-card:nth-child(5n+3) {
+            border-left-color: #4facfe;
+        }
+        
+        .style-tip-card:nth-child(5n+3) .style-tip-icon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .style-tip-card:nth-child(5n+4) {
+            border-left-color: #43e97b;
+        }
+        
+        .style-tip-card:nth-child(5n+4) .style-tip-icon {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+        
+        .style-tip-card:nth-child(5n+5) {
+            border-left-color: #fa709a;
+        }
+        
+        .style-tip-card:nth-child(5n+5) .style-tip-icon {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .recommendations-header {
+                padding: 2rem 1.5rem;
+            }
+            
+            .recommendations-header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            
+            .recommendations-title {
+                font-size: 1.75rem;
+            }
+            
+            .recommendations-subtitle {
+                font-size: 1rem;
+            }
+            
+            .outfits-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .style-tips-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .style-tips-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .style-tips-header h3 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /*                    🎨 ANÁLISIS DE COLOR - DISEÑO MODERNO           */
+        /* ═══════════════════════════════════════════════════════════════════ */
+
+        .color-analysis-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #4a5f7f 100%);
+            border-radius: 30px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(44, 62, 80, 0.3);
+        }
+
+        .color-analysis-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotateGlow 20s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .color-analysis-header-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .color-header-icon-container {
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: colorPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes colorPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 12px 40px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .color-header-icon-container i {
+            font-size: 3rem;
+            color: white;
+            animation: iconSpin 4s ease-in-out infinite;
+        }
+
+        @keyframes iconSpin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        .color-header-text {
+            flex: 1;
+        }
+
+        .color-analysis-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: -1px;
+        }
+
+        .color-analysis-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin: 0.5rem 0 0 0;
+            font-weight: 300;
+        }
+
+        .color-analysis-header-decoration {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                #546e7a 0%, 
+                #607d8b 25%, 
+                #78909c 50%, 
+                #90a4ae 75%, 
+                #b0bec5 100%
+            );
+            background-size: 200% 100%;
+            animation: rainbowFlow 3s linear infinite;
+        }
+
+        @keyframes rainbowFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        /* Container de análisis */
+        .color-analysis-container {
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Card de detección facial */
+        .face-detection-card {
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.2), rgba(74, 95, 127, 0.2));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: cardFadeIn 0.6s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .face-detection-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .face-detection-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(52, 73, 94, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .face-detection-card:hover::before {
+            opacity: 1;
+        }
+
+        .detection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .detection-item {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .detection-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .detection-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #34495e, #4a5f7f);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(52, 73, 94, 0.3);
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .detection-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .detection-icon.success {
+            background: linear-gradient(135deg, #3c6e71, #5a8c8f);
+        }
+
+        .detection-icon.warning {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .detection-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .detection-label {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Card de tono de piel */
+        .skin-tone-card {
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.2), rgba(74, 95, 127, 0.2));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: cardFadeIn 0.6s ease-out 0.2s both;
+        }
+
+        .skin-tone-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(52, 73, 94, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .skin-tone-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 2rem;
+            border-radius: 50%;
+            border: 6px solid white;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.3),
+                inset 0 4px 10px rgba(0, 0, 0, 0.2),
+                0 0 0 10px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            animation: skinGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes skinGlow {
+            0%, 100% { 
+                box-shadow: 
+                    0 10px 40px rgba(0, 0, 0, 0.3),
+                    inset 0 4px 10px rgba(0, 0, 0, 0.2),
+                    0 0 0 10px rgba(255, 255, 255, 0.1);
+            }
+            50% { 
+                box-shadow: 
+                    0 15px 50px rgba(0, 0, 0, 0.4),
+                    inset 0 4px 10px rgba(0, 0, 0, 0.2),
+                    0 0 0 10px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .skin-tone-circle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: skinShine 4s ease-in-out infinite;
+        }
+
+        @keyframes skinShine {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .skin-tone-rgb {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            display: inline-block;
+            color: white;
+            font-weight: 600;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Sección de paleta de colores */
+        .color-palette-showcase {
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.2), rgba(74, 95, 127, 0.2));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 3rem;
+            margin-top: 2rem;
+            animation: cardFadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .palette-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 3rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .palette-title i {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .palette-category {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .palette-category:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(10px);
+        }
+
+        .palette-category-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .palette-category-title i {
+            font-size: 1.8rem;
+        }
+
+        .palette-swatches-container {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .palette-swatches {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch-modern {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            border: 3px solid white;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.3),
+                inset 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-swatch-modern::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .color-swatch-modern:hover {
+            transform: translateY(-10px) scale(1.15) rotate(5deg);
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.4),
+                inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-swatch-modern:hover::before {
+            opacity: 1;
+            animation: swatchShine 0.6s ease-in-out;
+        }
+
+        @keyframes swatchShine {
+            from { transform: translate(-100%, -100%); }
+            to { transform: translate(100%, 100%); }
+        }
+
+        .palette-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid rgba(255, 255, 255, 0.3);
+            font-style: italic;
+        }
+
+        /* Responsive para análisis de color */
+        @media (max-width: 768px) {
+            .color-analysis-header {
+                padding: 2rem 1.5rem;
+            }
+
+            .color-analysis-header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .color-analysis-title {
+                font-size: 1.8rem;
+            }
+
+            .color-analysis-subtitle {
+                font-size: 1rem;
+            }
+
+            .detection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .skin-tone-circle {
+                width: 120px;
+                height: 120px;
+            }
+
+            .palette-title {
+                font-size: 1.5rem;
+            }
+
+            .color-swatch-modern {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+            transition: all 0.3s ease;
+        }
+        
+        #cameraStream:active, #captureCanvas:active {
+            cursor: grabbing;
+        }
+        
+        #cameraStream {
+            border: 3px solid rgba(13, 110, 253, 0.8);
+        }
+        
+        #captureCanvas {
+            border: 3px solid rgba(25, 135, 84, 0.8);
+            max-height: none !important;
+        }
+        
+        /* Contenedor scrollable para la imagen capturada */
+        #capturedView {
+            overflow: auto;
+            max-height: 500px;
+        }
+        
+        #capturedView::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        #capturedView::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        #capturedView::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        
+        #capturedView::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Animación de carga */
+        #cameraStatus {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+        
+        /* Responsive adjustments for camera modal */
+        @media (max-width: 768px) {
+            #cameraModal .modal-dialog {
+                max-width: 95%;
+                width: 95%;
+                margin: 0.5rem auto;
+            }
+            
+            #cameraModal .modal-header {
+                padding: 1rem;
+            }
+            
+            #cameraModal .modal-title {
+                font-size: 1.1rem;
+            }
+            
+            #cameraModal .modal-body {
+                padding: 1rem;
+                max-height: 60vh;
+            }
+            
+            #cameraModal .modal-footer {
+                padding: 1rem;
+                gap: 0.5rem;
+            }
+            
+            #cameraModal .modal-footer .btn {
+                min-width: 100%;
+                margin-bottom: 0;
+                font-size: 0.95rem;
+                padding: 0.65rem 1rem;
+            }
+            
+            #cameraView, #capturedView {
+                min-height: 300px;
+                max-height: none;
+                padding: 0.5rem;
+            }
+            
+            #capturedView {
+                max-height: 400px;
+            }
+        }
+
+        
+        @media (min-width: 1200px) {
+            #cameraModal .modal-dialog {
+                max-width: 1100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Efecto de partículas animadas -->
+    <div class="particles" id="particles"></div>
+    
+    <div class="container main-container">
+        <!-- Header -->
+        <div class="row mb-2">
+            <div class="col-12 main-title">
+                <h1>
+                    <i class="fas fa-magic me-2"></i>
+                    Outfit AI
+                </h1>
+                <p class="subtitle">
+                    <i class="fas fa-cogs me-2"></i>
+                    Sistema Avanzado de Preprocesamiento & Análisis de Imágenes
+                </p>
+                <p class="text-white-50 mt-2" style="font-size: 0.85rem;">
+                    🔬 15 Etapas de Procesamiento | 📊 Análisis Estadístico | 🎨 Visualizaciones Interactivas
+                </p>
+            </div>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="row">
+            <!-- Subir Imagen Card -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        Subir Imagen
+                    </div>
+                    <div class="card-body">
+                        <!-- Upload Zone (Drag & Drop) -->
+                        <div class="upload-zone" id="uploadZone">
+                            <i class="fas fa-images fa-3x text-primary mb-3"></i>
+                            <h5 class="mb-2">Arrastra tu imagen aquí</h5>
+                            <p class="text-muted mb-3" style="font-size: 0.9rem;">o haz click para seleccionar</p>
+                            
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                            
+                            <div class="mt-3">
+                                <button class="btn btn-primary btn-lg" onclick="document.getElementById('imageInput').click()">
+                                    <i class="fas fa-folder-open me-2"></i>
+                                    Seleccionar Archivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Capturar Foto Card -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="fas fa-camera me-2"></i>
+                        Capturar Foto
+                    </div>
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <i class="fas fa-camera fa-5x text-success mb-4" style="opacity: 0.7;"></i>
+                        <h5 class="mb-3 text-center">Toma una foto con tu cámara</h5>
+                        <p class="text-muted text-center mb-4" style="font-size: 0.9rem;">Usa la cámara de tu dispositivo para capturar una imagen</p>
+                        
+                        <button class="btn btn-success btn-lg" onclick="openCamera()">
+                            <i class="fas fa-camera me-2"></i>
+                            Abrir Cámara
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <!-- Camera Modal -->
+                        <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-camera me-2"></i>
+                                            Capturar Foto
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <div id="cameraView" style="display: flex; align-items: center; justify-content: center;">
+                                            <video id="cameraStream" autoplay playsinline style="border-radius: 10px; border: 3px solid #007bff;"></video>
+                                        </div>
+                                        <div id="capturedView" style="display: none;">
+                                            <canvas id="captureCanvas" style="border-radius: 10px; border: 3px solid #28a745;"></canvas>
+                                            <div class="mt-3 text-white-50" style="font-size: 0.9rem;">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                💡 Usa la rueda del mouse o pinch para hacer zoom • Arrastra para mover • Doble clic para resetear
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4" id="cameraStatus">
+                                            <div class="spinner-border text-primary spinner-border-lg" role="status" style="width: 3rem; height: 3rem;">
+                                                <span class="visually-hidden">Iniciando cámara...</span>
+                                            </div>
+                                            <p class="mt-3 fw-bold">Iniciando cámara...</p>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" onclick="stopCamera()">
+                                            <i class="fas fa-times me-2"></i>
+                                            Cancelar
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-lg" id="captureBtn" onclick="capturePhoto()" disabled>
+                                            <i class="fas fa-camera me-2"></i>
+                                            Capturar Foto
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-lg" id="usePhotoBtn" onclick="usePhoto()" style="display: none;">
+                                            <i class="fas fa-check me-2"></i>
+                                            Usar esta Foto
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-lg" id="retakeBtn" onclick="retakePhoto()" style="display: none;">
+                                            <i class="fas fa-redo me-2"></i>
+                                            Tomar Otra Foto
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Container -->
+        <div class="progress-container" id="progressContainer">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cogs me-2"></i>
+                    Procesando Imagen
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-processing mb-4">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Procesando imagen con análisis avanzado...
+                    </div>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progressBar" role="progressbar" style="width: 0%">
+                        </div>
+                    </div>
+                    
+                    <div id="processingSteps">
+                        <div class="processing-step" id="step1">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Cargando imagen...</span>
+                        </div>
+                        <div class="processing-step" id="step2">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Preprocesamiento avanzado...</span>
+                        </div>
+                        <div class="processing-step" id="step3">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Análisis facial y colorimetría...</span>
+                        </div>
+                        <div class="processing-step" id="step4">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Generando estadísticas...</span>
+                        </div>
+                        <div class="processing-step" id="step5">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Creando visualizaciones...</span>
+                        </div>
+                        <div class="processing-step" id="step6">
+                            <i class="fas fa-circle text-secondary"></i>
+                            <span>Generando recomendaciones...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container" id="resultsContainer">
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="preprocessing-tab" data-bs-toggle="tab" 
+                            data-bs-target="#preprocessing" type="button" role="tab">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Preprocesamiento y Estadísticas
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="images-tab" data-bs-toggle="tab" 
+                            data-bs-target="#images" type="button" role="tab">
+                        <i class="fas fa-images me-2"></i>
+                        Resultados Visuales
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" 
+                            data-bs-target="#analysis" type="button" role="tab">
+                        <i class="fas fa-palette me-2"></i>
+                        Análisis de Color
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" 
+                            data-bs-target="#recommendations" type="button" role="tab">
+                        <i class="fas fa-tshirt me-2"></i>
+                        Recomendaciones
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="resultTabContent">
+                <!-- Preprocessing Tab -->
+                <div class="tab-pane fade show active" id="preprocessing" role="tabpanel">
+                    <h4 class="mb-4">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>
+                        Análisis Detallado del Preprocesamiento - 15 Etapas Completas
+                    </h4>
+                    
+                    <!-- 15 Processing Stages Gallery -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-layer-group me-2"></i>Galería de las 15 Etapas de Preprocesamiento</h6>
+                                <p class="mb-0">Cada etapa muestra la imagen transformada, descripción y estadísticas clave</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="stagesGallery" class="row mb-4">
+                        <!-- Las 15 etapas se llenarán aquí mediante JavaScript -->
+                    </div>
+                    
+                    <!-- Processing Summary -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Resumen del Procesamiento</h6>
+                                <pre id="processingSummaryText" class="mb-0"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics Table -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-table me-2"></i>Estadísticas por Etapa</h5>
+                            <div class="table-responsive">
+                                <div id="statisticsTable"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts -->
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <h5><i class="fas fa-chart-area me-2"></i>Gráficos Comparativos</h5>
+                            <div class="chart-container">
+                                <img id="comparisonCharts" class="img-fluid" alt="Gráficos comparativos">
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-4">
+                            <h5><i class="fas fa-chart-bar me-2"></i>Evolución de Histogramas</h5>
+                            <div class="chart-container">
+                                <img id="histogramCharts" class="img-fluid" alt="Histogramas">
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-4">
+                            <h5><i class="fas fa-chart-pie me-2"></i>Métricas de Calidad (Radar)</h5>
+                            <div class="chart-container">
+                                <img id="radarChart" class="img-fluid" alt="Gráfico de radar">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Images Tab -->
+                <div class="tab-pane fade" id="images" role="tabpanel">
+                    <h4 class="mb-4">
+                        <i class="fas fa-images me-2 text-primary"></i>
+                        Resultados Visuales del Procesamiento
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-image me-2"></i>
+                                    Imagen Procesada Final
+                                </div>
+                                <div class="card-body text-center">
+                                    <img id="processedImage" class="image-preview" alt="Imagen procesada">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-palette me-2"></i>
+                                    Overlay de Paleta de Colores
+                                </div>
+                                <div class="card-body text-center">
+                                    <img id="paletteOverlay" class="image-preview" alt="Paleta de colores">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Tab -->
+                <div class="tab-pane fade" id="analysis" role="tabpanel">
+                    <!-- Header impactante para Análisis de Color -->
+                    <div class="color-analysis-header">
+                        <div class="color-analysis-header-content">
+                            <div class="color-header-icon-container">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <div class="color-header-text">
+                                <h2 class="color-analysis-title">Tu Análisis de Color Personal</h2>
+                                <p class="color-analysis-subtitle">Descubre tu paleta perfecta basada en ciencia y tecnología IA</p>
+                            </div>
+                        </div>
+                        <div class="color-analysis-header-decoration"></div>
+                    </div>
+                    
+                    <!-- Grid de resultados con diseño moderno -->
+                    <div class="color-analysis-container" id="analysisResults">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Recommendations Tab -->
+                <div class="tab-pane fade" id="recommendations" role="tabpanel">
+                    <!-- Header con diseño impactante -->
+                    <div class="recommendations-header">
+                        <div class="recommendations-header-content">
+                            <div class="header-icon-container">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div class="header-text">
+                                <h2 class="recommendations-title">Tus Outfits Perfectos</h2>
+                                <p class="recommendations-subtitle">Combinaciones personalizadas basadas en tu análisis de color</p>
+                            </div>
+                        </div>
+                        <div class="recommendations-header-decoration"></div>
+                    </div>
+                    
+                    <!-- Outfits Grid -->
+                    <div class="outfits-grid" id="outfitRecommendations">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Style Tips Section -->
+                    <div class="style-tips-section mt-5">
+                        <div class="style-tips-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>Consejos de Estilo Personalizados</h3>
+                        </div>
+                        <div id="styleTips" class="style-tips-grid">
+                            <!-- Content will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Report Button -->
+        <div class="row mt-4" id="downloadSection" style="display: none;">
+            <div class="col-12 text-center">
+                <button class="btn btn-success btn-lg" onclick="downloadReport()">
+                    <i class="fas fa-download me-2"></i>
+                    Descargar Reporte Completo (JSON)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // JavaScript code will be added here
+        let currentResults = null;
+        let cameraStream = null;
+        let capturedImageBlob = null;
+        
+        // Initialize upload functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadZone = document.getElementById('uploadZone');
+            const imageInput = document.getElementById('imageInput');
+            
+            // Click handler (solo en el área, no en los botones)
+            uploadZone.addEventListener('click', function(e) {
+                // No hacer nada si se hizo click en un botón
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    return;
+                }
+                imageInput.click();
+            });
+            
+            // File input change
+            imageInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+            
+            // Drag and drop handlers
+            uploadZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', function() {
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                handleFileSelect(e.dataTransfer.files[0]);
+            });
+        });
+        
+        function handleFileSelect(file) {
+            if (!file) return;
+            
+            // Validate file type and size
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona un archivo de imagen válido.');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                alert('El archivo es demasiado grande. Máximo 5MB.');
+                return;
+            }
+            
+            // Start processing
+            processImage(file);
+        }
+        
+        function processImage(file) {
+            // Show progress container
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('downloadSection').style.display = 'none';
+            
+            // Simulate progress steps
+            simulateProgress();
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Send request
+            fetch('/process/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentResults = data;
+                    displayResults(data);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error procesando imagen: ' + error.message);
+                document.getElementById('progressContainer').style.display = 'none';
+            });
+        }
+        
+        function simulateProgress() {
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
+            const progressBar = document.getElementById('progressBar');
+            let currentStep = 0;
+            
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    // Mark current step as completed
+                    const stepElement = document.getElementById(steps[currentStep]);
+                    stepElement.classList.add('completed');
+                    stepElement.querySelector('i').className = 'fas fa-check-circle text-success';
+                    
+                    // Update progress bar
+                    const progress = ((currentStep + 1) / steps.length) * 100;
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = Math.round(progress) + '%';
+                    
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        }
+        
+        function displayResults(data) {
+            // Hide progress, show results
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+            document.getElementById('downloadSection').style.display = 'block';
+            
+            // Populate preprocessing tab with 15 stages
+            populatePreprocessingTab(data.preprocessing_stats, data.preprocessing_stages);
+            
+            // Populate images tab
+            populateImagesTab(data.images);
+            
+            // Populate analysis tab
+            populateAnalysisTab(data.analysis_results);
+            
+            // Populate recommendations tab
+            populateRecommendationsTab(data.outfit_recommendations, data.style_tips);
+        }
+        
+        function populatePreprocessingTab(stats, stages) {
+            // Populate 15 stages gallery
+            if (stages && stages.stages) {
+                const gallery = document.getElementById('stagesGallery');
+                gallery.innerHTML = '';
+                
+                const stageOrder = stages.stage_order;
+                let html = '';
+                
+                stageOrder.forEach((stageName, index) => {
+                    const stage = stages.stages[stageName];
+                    if (stage) {
+                        html += `
+                            <div class="col-lg-4 col-md-6">
+                                <div class="stage-card">
+                                    <div class="stage-header">
+                                        <div class="stage-number">${index + 1}</div>
+                                        <div class="stage-title">${stage.description}</div>
+                                    </div>
+                                    
+                                    <div class="stage-image-container">
+                                        <img src="${stage.image}" class="stage-image" alt="${stage.description}">
+                                    </div>
+                                    
+                                    <div class="stage-stats">
+                                        <table>`;
+                        
+                        if (stage.stats) {
+                            if (stage.stats.mean !== undefined) {
+                                html += `
+                                            <tr>
+                                                <td><i class="fas fa-chart-line me-1"></i>Media</td>
+                                                <td>${stage.stats.mean.toFixed(2)}</td>
+                                            </tr>`;
+                            }
+                            if (stage.stats.std !== undefined) {
+                                html += `
+                                            <tr>
+                                                <td><i class="fas fa-wave-square me-1"></i>Desv. Estándar</td>
+                                                <td>${stage.stats.std.toFixed(2)}</td>
+                                            </tr>`;
+                            }
+                            if (stage.stats.contrast !== undefined) {
+                                html += `
+                                            <tr>
+                                                <td><i class="fas fa-adjust me-1"></i>Contraste</td>
+                                                <td>${stage.stats.contrast.toFixed(2)}</td>
+                                            </tr>`;
+                            }
+                            if (stage.stats.sharpness !== undefined) {
+                                html += `
+                                            <tr>
+                                                <td><i class="fas fa-expand me-1"></i>Nitidez</td>
+                                                <td>${stage.stats.sharpness.toFixed(2)}</td>
+                                            </tr>`;
+                            }
+                            if (stage.stats.edge_density !== undefined) {
+                                html += `
+                                            <tr>
+                                                <td><i class="fas fa-border-style me-1"></i>Densidad de Bordes</td>
+                                                <td>${stage.stats.edge_density.toFixed(4)}</td>
+                                            </tr>`;
+                            }
+                        }
+                        
+                        html += `
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                gallery.innerHTML = html;
+            }
+            
+            // Summary text
+            document.getElementById('processingSummaryText').textContent = stats.summary_text;
+            
+            // Statistics table
+            document.getElementById('statisticsTable').innerHTML = stats.statistics_table;
+            
+            // Charts
+            if (stats.charts.comparison_charts) {
+                document.getElementById('comparisonCharts').src = 'data:image/png;base64,' + stats.charts.comparison_charts;
+            }
+            
+            if (stats.charts.histograms) {
+                document.getElementById('histogramCharts').src = 'data:image/png;base64,' + stats.charts.histograms;
+            }
+            
+            if (stats.charts.quality_radar) {
+                document.getElementById('radarChart').src = 'data:image/png;base64,' + stats.charts.quality_radar;
+            }
+        }
+        
+        function populateImagesTab(images) {
+            document.getElementById('processedImage').src = images.processed;
+            document.getElementById('paletteOverlay').src = images.palette_overlay;
+        }
+        
+        function populateAnalysisTab(analysis) {
+            const container = document.getElementById('analysisResults');
+            
+            let html = `
+                <!-- Grid de detección -->
+                <div class="face-detection-card">
+                    <div class="detection-grid">
+                        <div class="detection-item">
+                            <div class="detection-icon ${analysis.face_detected ? 'success' : 'warning'}">
+                                <i class="fas ${analysis.face_detected ? 'fa-user-check' : 'fa-user-times'}"></i>
+                            </div>
+                            <div class="detection-value">${analysis.face_detected ? '✓ DETECTADO' : '✗ NO DETECTADO'}</div>
+                            <div class="detection-label">Reconocimiento Facial</div>
+                        </div>
+            `;
+            
+            // Card de tono de piel
+            if (analysis.skin_tone && analysis.skin_tone !== 'No detectado') {
+                const skinToneStr = String(analysis.skin_tone);
+                const rgbMatch = skinToneStr.match(/(\d+),\s*(\d+),\s*(\d+)/);
+                
+                if (rgbMatch) {
+                    const r = rgbMatch[1];
+                    const g = rgbMatch[2];
+                    const b = rgbMatch[3];
+                    const rgbColor = `rgb(${r}, ${g}, ${b})`;
+                    
+                    html += `
+                        <div class="detection-item">
+                            <div class="skin-tone-circle" style="background: ${rgbColor};">
+                            </div>
+                            <div class="detection-label">Tu Tono de Piel</div>
+                            <div class="skin-tone-rgb">RGB(${r}, ${g}, ${b})</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="detection-item">
+                            <div class="detection-icon warning">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <div class="detection-value">${analysis.skin_tone}</div>
+                            <div class="detection-label">Tono de Piel</div>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div class="detection-item">
+                        <div class="detection-icon warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="detection-value">No detectado</div>
+                        <div class="detection-label">Tono de Piel</div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            // Paleta de colores con diseño moderno
+            if (analysis.color_palette) {
+                html += `
+                    <div class="color-palette-showcase">
+                        <h3 class="palette-title">
+                            <i class="fas fa-paint-brush"></i>
+                            Tu Paleta de Colores Personalizada
+                        </h3>
+                `;
+                
+                if (analysis.color_palette.primary && analysis.color_palette.primary.length > 0) {
+                    html += `
+                        <div class="palette-category">
+                            <h4 class="palette-category-title">
+                                <i class="fas fa-star" style="color: #ffd700;"></i>
+                                Colores Primarios
+                            </h4>
+                            <div class="palette-swatches-container">
+                                <div class="palette-swatches">`;
+                    
+                    analysis.color_palette.primary.forEach((color) => {
+                        html += `<div class="color-swatch-modern" style="background-color: ${color};" title="${color}"></div>`;
+                    });
+                    
+                    html += `
+                                </div>
+                                <div class="palette-description">
+                                    ✨ Colores principales que resaltan tu belleza natural y complementan tu tono de piel perfectamente
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (analysis.color_palette.accent && analysis.color_palette.accent.length > 0) {
+                    html += `
+                        <div class="palette-category">
+                            <h4 class="palette-category-title">
+                                <i class="fas fa-bolt" style="color: #ff6b6b;"></i>
+                                Colores de Acento
+                            </h4>
+                            <div class="palette-swatches-container">
+                                <div class="palette-swatches">`;
+                    
+                    analysis.color_palette.accent.forEach((color) => {
+                        html += `<div class="color-swatch-modern" style="background-color: ${color};" title="${color}"></div>`;
+                    });
+                    
+                    html += `
+                                </div>
+                                <div class="palette-description">
+                                    ⚡ Perfectos para destacar, agregar energía y crear puntos focales en tu outfit
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (analysis.color_palette.neutral && analysis.color_palette.neutral.length > 0) {
+                    html += `
+                        <div class="palette-category">
+                            <h4 class="palette-category-title">
+                                <i class="fas fa-circle" style="color: #95a5a6;"></i>
+                                Colores Neutros
+                            </h4>
+                            <div class="palette-swatches-container">
+                                <div class="palette-swatches">`;
+                    
+                    analysis.color_palette.neutral.forEach((color) => {
+                        html += `<div class="color-swatch-modern" style="background-color: ${color};" title="${color}"></div>`;
+                    });
+                    
+                    html += `
+                                </div>
+                                <div class="palette-description">
+                                    🎯 Ideales para combinaciones versátiles, elegantes y atemporales que nunca fallan
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function populateRecommendationsTab(recommendations, tips) {
+            const container = document.getElementById('outfitRecommendations');
+            
+            const styleIcons = {
+                'Casual Elegante': 'fa-user-tie',
+                'Profesional': 'fa-briefcase',
+                'Deportivo': 'fa-running',
+                'Formal': 'fa-user-suit',
+                'Casual': 'fa-tshirt',
+                'Moderno': 'fa-star',
+                'Bohemio': 'fa-leaf',
+                'Urbano': 'fa-city',
+                'Clásico': 'fa-crown',
+                'Minimalista': 'fa-circle'
+            };
+            
+            const gradientColors = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            ];
+            
+            let html = '';
+            recommendations.forEach((outfit, index) => {
+                const icon = styleIcons[outfit.style] || 'fa-tshirt';
+                const gradient = gradientColors[index % gradientColors.length];
+                
+                html += `
+                    <div class="outfit-card" style="animation: fadeInUp 0.6s ease ${index * 0.1}s both;">
+                        <div class="outfit-card-header" style="background: ${gradient};">
+                            <div class="outfit-card-header-content">
+                                <div class="outfit-style-badge">
+                                    <i class="fas ${icon}"></i>
+                                    <span>Estilo</span>
+                                </div>
+                                <h3 class="outfit-card-title">${outfit.style}</h3>
+                                <p class="outfit-card-description">${outfit.description}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="outfit-card-body">
+                            <h4 class="outfit-pieces-title">
+                                Prendas Recomendadas
+                            </h4>
+                `;
+                
+                Object.entries(outfit.pieces).forEach(([key, piece]) => {
+                    html += `
+                        <div class="outfit-piece-item">
+                            <div class="piece-color-swatch" style="background: ${piece.color};" title="${piece.color}"></div>
+                            <div class="piece-info">
+                                <span class="piece-type">${piece.type}</span>
+                                <p class="piece-description">${piece.description}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                        
+                        <div class="outfit-card-footer">
+                            <div class="color-harmony-badge">
+                                ${outfit.color_harmony}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Style tips con diseño completamente renovado
+            const tipsContainer = document.getElementById('styleTips');
+            const tipIcons = ['fa-check-circle', 'fa-heart', 'fa-star', 'fa-gem', 'fa-crown', 'fa-sparkles', 'fa-palette', 'fa-magic'];
+            
+            let tipsHtml = '';
+            tips.forEach((tip, idx) => {
+                const icon = tipIcons[idx % tipIcons.length];
+                
+                tipsHtml += `
+                    <div class="style-tip-card" style="animation: fadeInUp 0.6s ease ${idx * 0.1}s both;">
+                        <div class="style-tip-content">
+                            <div class="style-tip-icon">
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div class="style-tip-text">${tip}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            tipsContainer.innerHTML = tipsHtml;
+        }
+        
+        // Agregar animación fadeInUp al CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        function downloadReport() {
+            if (!currentResults) {
+                alert('No hay datos para descargar');
+                return;
+            }
+            
+            // Create and download JSON file
+            const dataStr = JSON.stringify(currentResults, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `outfit_analysis_report_${new Date().toISOString().split('T')[0]}.json`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+        }
+        
+        // ==================== FUNCIONES DE CÁMARA ====================
+        
+        function openCamera() {
+            // Mostrar modal
+            const modalElement = document.getElementById('cameraModal');
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',  // No cerrar al hacer clic fuera
+                keyboard: true       // Permitir cerrar con ESC
+            });
+            modal.show();
+            
+            // Agregar listener para ESC
+            const handleEscape = function(event) {
+                if (event.key === 'Escape' || event.keyCode === 27) {
+                    stopCamera();
+                    modal.hide();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Limpiar listener cuando se cierre el modal
+            modalElement.addEventListener('hidden.bs.modal', function() {
+                stopCamera();
+                document.removeEventListener('keydown', handleEscape);
+            }, { once: true });
+            
+            // Reiniciar estados
+            document.getElementById('cameraView').style.display = 'block';
+            document.getElementById('capturedView').style.display = 'none';
+            document.getElementById('captureBtn').disabled = true;
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('usePhotoBtn').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('cameraStatus').style.display = 'block';
+            
+            // Solicitar acceso a la cámara
+            startCamera();
+        }
+        
+        async function startCamera() {
+            const video = document.getElementById('cameraStream');
+            const statusDiv = document.getElementById('cameraStatus');
+            
+            try {
+                // Solicitar acceso a la cámara con preferencias
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user' // Cámara frontal por defecto
+                    },
+                    audio: false
+                };
+                
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = cameraStream;
+                
+                // Esperar a que el video esté listo
+                video.onloadedmetadata = () => {
+                    statusDiv.style.display = 'none';
+                    document.getElementById('captureBtn').disabled = false;
+                };
+                
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error al acceder a la cámara</strong><br>
+                        ${error.name === 'NotAllowedError' ? 
+                            'Permiso denegado. Por favor, permite el acceso a la cámara.' :
+                            'No se pudo acceder a la cámara. Verifica que esté conectada y no esté en uso.'}
+                    </div>
+                `;
+                document.getElementById('captureBtn').disabled = true;
+            }
+        }
+        
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+        
+        function capturePhoto() {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.getElementById('captureCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Ajustar tamaño del canvas al video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Dibujar el frame actual del video en el canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Detener la cámara
+            stopCamera();
+            
+            // Mostrar la imagen capturada
+            document.getElementById('cameraView').style.display = 'none';
+            document.getElementById('capturedView').style.display = 'block';
+            
+            // Habilitar scroll y zoom en la imagen capturada
+            enableImageInteraction(canvas);
+            
+            // Actualizar botones
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('usePhotoBtn').style.display = 'inline-block';
+            document.getElementById('retakeBtn').style.display = 'inline-block';
+            
+            // Convertir canvas a blob
+            canvas.toBlob(blob => {
+                capturedImageBlob = blob;
+            }, 'image/jpeg', 0.95);
+        }
+        
+        // Función para habilitar interacción con la imagen (pan/zoom)
+        function enableImageInteraction(canvas) {
+            const container = document.getElementById('capturedView');
+            let scale = 1;
+            let panning = false;
+            let pointX = 0;
+            let pointY = 0;
+            let start = { x: 0, y: 0 };
+            
+            // Zoom con scroll del mouse
+            container.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                
+                const xs = (e.clientX - pointX) / scale;
+                const ys = (e.clientY - pointY) / scale;
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                scale = Math.max(0.5, Math.min(3, scale + delta));
+                
+                pointX = e.clientX - xs * scale;
+                pointY = e.clientY - ys * scale;
+                
+                updateCanvasTransform();
+            });
+            
+            // Pan con mouse
+            canvas.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                start = { x: e.clientX - pointX, y: e.clientY - pointY };
+                panning = true;
+            });
+            
+            canvas.addEventListener('mouseup', function(e) {
+                panning = false;
+            });
+            
+            canvas.addEventListener('mousemove', function(e) {
+                e.preventDefault();
+                if (!panning) return;
+                
+                pointX = e.clientX - start.x;
+                pointY = e.clientY - start.y;
+                
+                updateCanvasTransform();
+            });
+            
+            // Soporte táctil (móviles)
+            let initialDistance = 0;
+            let initialScale = 1;
+            
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    start = { 
+                        x: e.touches[0].clientX - pointX, 
+                        y: e.touches[0].clientY - pointY 
+                    };
+                    panning = true;
+                } else if (e.touches.length === 2) {
+                    panning = false;
+                    initialDistance = getDistance(e.touches[0], e.touches[1]);
+                    initialScale = scale;
+                }
+            });
+            
+            canvas.addEventListener('touchend', function(e) {
+                panning = false;
+            });
+            
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 1 && panning) {
+                    pointX = e.touches[0].clientX - start.x;
+                    pointY = e.touches[0].clientY - start.y;
+                    updateCanvasTransform();
+                } else if (e.touches.length === 2) {
+                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                    scale = Math.max(0.5, Math.min(3, initialScale * (currentDistance / initialDistance)));
+                    updateCanvasTransform();
+                }
+            });
+            
+            function updateCanvasTransform() {
+                canvas.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+            }
+            
+            function getDistance(touch1, touch2) {
+                const dx = touch1.clientX - touch2.clientX;
+                const dy = touch1.clientY - touch2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            // Doble clic para resetear zoom
+            canvas.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                scale = 1;
+                pointX = 0;
+                pointY = 0;
+                updateCanvasTransform();
+            });
+        }
+        
+        function retakePhoto() {
+            // Volver a la vista de cámara
+            document.getElementById('cameraView').style.display = 'block';
+            document.getElementById('capturedView').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('usePhotoBtn').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'none';
+            
+            // Reiniciar cámara
+            startCamera();
+        }
+        
+        function usePhoto() {
+            if (!capturedImageBlob) {
+                alert('Error al capturar la imagen. Por favor, intenta de nuevo.');
+                return;
+            }
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
+            modal.hide();
+            
+            // Crear un archivo File desde el blob
+            const file = new File([capturedImageBlob], `captura_${Date.now()}.jpg`, {
+                type: 'image/jpeg'
+            });
+            
+            // Procesar la imagen capturada
+            handleFileSelect(file);
+            
+            // Limpiar
+            capturedImageBlob = null;
+        }
+        
+        // Limpiar cámara cuando se cierra el modal
+        document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () {
+            stopCamera();
+        });
+        
+        // ==================== FIN FUNCIONES DE CÁMARA ====================
+        
+        // ==================== EFECTO DE PARTÍCULAS ====================
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Posición inicial aleatoria
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                
+                // Tamaño aleatorio
+                const size = Math.random() * 3 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                // Color aleatorio con transparencia
+                const colors = ['rgba(0, 255, 136, 0.6)', 'rgba(0, 212, 255, 0.6)', 'rgba(255, 107, 107, 0.6)', 'rgba(255, 217, 61, 0.6)'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Crear partículas al cargar la página
+        createParticles();
+        
+        // ==================== FIN EFECTO DE PARTÍCULAS ====================
+    </script>
+</body>
+</html>

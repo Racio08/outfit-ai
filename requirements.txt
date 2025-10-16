@@ -1,0 +1,25 @@
+# Django Framework
+Django==5.2.7
+
+# Image Processing
+pillow>=10.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+scikit-image>=0.21.0
+scipy>=1.11.0
+
+# Data Analysis and Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+pandas>=2.0.0
+plotly>=5.15.0
+
+# Machine Learning and AI
+mediapipe>=0.10.0
+
+# Web Framework Utilities
+requests>=2.31.0
+
+# Development Tools
+ipython
+jupyter
