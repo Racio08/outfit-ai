@@ -13,44 +13,63 @@ if [ ! -f "manage.py" ]; then
 fi
 
 echo ""
-echo "📋 VERIFICANDO DEPENDENCIAS..."
-echo "------------------------------"
+echo "📋 VERIFICANDO ENTORNO..."
+echo "-------------------------"
 
 # Verificar Python
 python3 --version 2>/dev/null || { echo "❌ Python3 no encontrado"; exit 1; }
 echo "✅ Python3 disponible"
 
+# Detectar y activar entorno virtual
+VENV_PATH=""
+if [ -d ".venv" ]; then
+    VENV_PATH=".venv"
+elif [ -d "venv" ]; then
+    VENV_PATH="venv"
+fi
+
+if [ -n "$VENV_PATH" ]; then
+    echo "✅ Entorno virtual encontrado: $VENV_PATH"
+    source "$VENV_PATH/bin/activate"
+    PYTHON_CMD="$VENV_PATH/bin/python"
+    PIP_CMD="$VENV_PATH/bin/pip"
+else
+    echo "⚠️  No se encontró entorno virtual, usando Python del sistema"
+    PYTHON_CMD="python3"
+    PIP_CMD="pip3"
+fi
+
 # Verificar pip
-pip --version 2>/dev/null || { echo "❌ pip no encontrado"; exit 1; }
+$PIP_CMD --version 2>/dev/null || { echo "❌ pip no encontrado"; exit 1; }
 echo "✅ pip disponible"
 
 # Instalar dependencias si es necesario
 echo ""
-echo "📦 INSTALANDO DEPENDENCIAS..."
-echo "-----------------------------"
-pip install -r requirements.txt > /dev/null 2>&1
-echo "✅ Dependencias instaladas"
+echo "📦 VERIFICANDO DEPENDENCIAS..."
+echo "------------------------------"
+if ! $PYTHON_CMD -c "import django" 2>/dev/null; then
+    echo "Instalando dependencias desde requirements.txt..."
+    $PIP_CMD install -r requirements.txt -q
+    echo "✅ Dependencias instaladas"
+else
+    echo "✅ Dependencias ya instaladas"
+fi
 
 echo ""
 echo "🔧 CONFIGURANDO DJANGO..."
 echo "------------------------"
 
+# Ejecutar verificación del sistema
+$PYTHON_CMD manage.py check --deploy 2>/dev/null || $PYTHON_CMD manage.py check
+echo "✅ Verificación del sistema completada"
+
 # Ejecutar migraciones
-python manage.py migrate > /dev/null 2>&1
+$PYTHON_CMD manage.py migrate --noinput > /dev/null 2>&1
 echo "✅ Migraciones aplicadas"
 
 # Crear directorios necesarios
-mkdir -p media static
+mkdir -p media static assets
 echo "✅ Directorios creados"
-
-echo ""
-echo "🎯 EJECUTANDO DEMOSTRACIÓN DEL PREPROCESAMIENTO..."
-echo "------------------------------------------------"
-
-# Ejecutar demo del sistema de preprocesamiento
-echo "Ejecutando demo en 3 segundos..."
-sleep 3
-python demo_preprocessing.py 2>/dev/null || echo "⚠️ Demo completada (posible interrupción manual)"
 
 echo ""
 echo "🌐 INICIANDO SERVIDOR WEB..."
@@ -61,7 +80,7 @@ echo "📌 Puedes subir imágenes para ver el análisis completo"
 echo "📌 Presiona Ctrl+C para detener el servidor"
 echo ""
 echo "🔥 CARACTERÍSTICAS PRINCIPALES:"
-echo "  • 8 etapas de preprocesamiento avanzado"
+echo "  • 15+ etapas de preprocesamiento avanzado"
 echo "  • Estadísticas detalladas con gráficos"
 echo "  • Análisis facial y colorimetría"
 echo "  • Recomendaciones de outfit inteligentes"
@@ -70,8 +89,8 @@ echo "  • Reportes exportables en JSON"
 echo ""
 
 # Esperar un momento antes de iniciar el servidor
-sleep 2
+sleep 1
 
 # Iniciar servidor Django
 echo "🚀 Iniciando servidor Django..."
-python manage.py runserver 0.0.0.0:8000
+$PYTHON_CMD manage.py runserver 0.0.0.0:8000

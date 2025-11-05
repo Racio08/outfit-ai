@@ -82,6 +82,10 @@ cd outfit-ai
 sudo apt-get update
 sudo apt-get install -y python3-tk libgl1-mesa-glx libglib2.0-0
 
+# Crear y activar entorno virtual (recomendado)
+python3 -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+
 # Instalar dependencias Python
 pip install -r requirements.txt
 ```
@@ -95,14 +99,33 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 4. Ejecutar el Sistema
-```bash
-# Ejecutar demo de preprocesamiento
-python demo_preprocessing.py
+## ⚡ Inicio Rápido
 
-# Iniciar servidor web
+### Opción 1: Script Todo-en-Uno (Recomendado)
+El script verifica automáticamente el entorno, instala dependencias y ejecuta el servidor:
+
+```bash
+./ejecutar.sh
+```
+
+### Opción 2: Inicio Rápido Simple
+```bash
+./start.sh
+```
+
+### Opción 3: Ejecución Manual
+```bash
+# Activar entorno virtual
+source .venv/bin/activate
+
+# Iniciar servidor
 python manage.py runserver 0.0.0.0:8000
 ```
+
+### Acceder a la Aplicación
+Abre tu navegador en: **http://localhost:8000**
+
+Para más detalles, consulta [INICIO_RAPIDO.md](./INICIO_RAPIDO.md)
 
 ## 📊 Demostración del Sistema
 
