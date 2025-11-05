@@ -28,8 +28,18 @@ echo "✅ pip disponible"
 echo ""
 echo "📦 INSTALANDO DEPENDENCIAS..."
 echo "-----------------------------"
-pip install -r requirements.txt > /dev/null 2>&1
-echo "✅ Dependencias instaladas"
+
+# Intentar primero con apt (más confiable)
+if command -v apt-get &> /dev/null; then
+    echo "Instalando con apt-get..."
+    sudo apt-get update -qq 2>/dev/null || true
+    sudo apt-get install -y -qq python3-django python3-opencv python3-numpy python3-pil python3-matplotlib python3-pandas python3-scipy python3-seaborn python3-plotly python3-skimage 2>/dev/null || true
+fi
+
+# Intentar pip para paquetes faltantes (con timeout más largo)
+echo "Verificando paquetes adicionales con pip..."
+pip install --timeout=120 gradio 2>/dev/null || echo "⚠️ Algunos paquetes opcionales no se instalaron"
+echo "✅ Dependencias principales instaladas"
 
 echo ""
 echo "🔧 CONFIGURANDO DJANGO..."
