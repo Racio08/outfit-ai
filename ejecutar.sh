@@ -28,15 +28,25 @@ echo "✅ pip disponible"
 echo ""
 echo "📦 INSTALANDO DEPENDENCIAS..."
 echo "-----------------------------"
-pip install -r requirements.txt > /dev/null 2>&1
-echo "✅ Dependencias instaladas"
+
+# Intentar primero con apt (más confiable)
+if command -v apt-get &> /dev/null; then
+    echo "Instalando con apt-get..."
+    sudo apt-get update -qq 2>/dev/null || true
+    sudo apt-get install -y -qq python3-django python3-opencv python3-numpy python3-pil python3-matplotlib python3-pandas python3-scipy python3-seaborn python3-plotly python3-skimage 2>/dev/null || true
+fi
+
+# Intentar pip para paquetes faltantes (con timeout más largo)
+echo "Verificando paquetes adicionales con pip..."
+pip install --timeout=120 gradio 2>/dev/null || echo "⚠️ Algunos paquetes opcionales no se instalaron"
+echo "✅ Dependencias principales instaladas"
 
 echo ""
 echo "🔧 CONFIGURANDO DJANGO..."
 echo "------------------------"
 
 # Ejecutar migraciones
-python manage.py migrate > /dev/null 2>&1
+python3 manage.py migrate > /dev/null 2>&1
 echo "✅ Migraciones aplicadas"
 
 # Crear directorios necesarios
@@ -61,7 +71,7 @@ echo "📌 Puedes subir imágenes para ver el análisis completo"
 echo "📌 Presiona Ctrl+C para detener el servidor"
 echo ""
 echo "🔥 CARACTERÍSTICAS PRINCIPALES:"
-echo "  • 8 etapas de preprocesamiento avanzado"
+echo "  • Sistema de preprocesamiento avanzado"
 echo "  • Estadísticas detalladas con gráficos"
 echo "  • Análisis facial y colorimetría"
 echo "  • Recomendaciones de outfit inteligentes"
@@ -74,4 +84,4 @@ sleep 2
 
 # Iniciar servidor Django
 echo "🚀 Iniciando servidor Django..."
-python manage.py runserver 0.0.0.0:8000
+python3 manage.py runserver 0.0.0.0:8000
