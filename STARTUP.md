@@ -67,7 +67,7 @@ python3 main.py
 ### Interfaz Django (Puerto 8000)
 
 **Características completas**:
-- 📊 Sistema de preprocesamiento con 15 etapas
+- 📊 Sistema de preprocesamiento avanzado
 - 🎨 Análisis facial y colorimetría
 - 👔 Recomendaciones de outfit personalizadas
 - 📈 Gráficos y estadísticas detalladas
@@ -92,7 +92,7 @@ python3 main.py
 2. **Cargar imagen**: Arrastra una foto o usa el botón "Seleccionar Archivo"
 3. **Esperar procesamiento**: Verás una barra de progreso
 4. **Explorar resultados** en las 4 pestañas:
-   - **Preprocesamiento**: 15 etapas con estadísticas
+   - **Preprocesamiento**: Análisis detallado con estadísticas
    - **Imágenes**: Resultados visuales
    - **Análisis**: Detección facial y colores
    - **Recomendaciones**: Sugerencias de outfit
@@ -157,7 +157,7 @@ python3 demo_preprocessing.py
 ```
 
 Esto mostrará:
-- Estadísticas de 8 etapas de procesamiento
+- Estadísticas de procesamiento detalladas
 - Mejoras de calidad
 - Gráficos comparativos
 - Histogramas de evolución

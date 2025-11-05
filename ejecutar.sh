@@ -46,7 +46,7 @@ echo "🔧 CONFIGURANDO DJANGO..."
 echo "------------------------"
 
 # Ejecutar migraciones
-python manage.py migrate > /dev/null 2>&1
+python3 manage.py migrate > /dev/null 2>&1
 echo "✅ Migraciones aplicadas"
 
 # Crear directorios necesarios
@@ -71,7 +71,7 @@ echo "📌 Puedes subir imágenes para ver el análisis completo"
 echo "📌 Presiona Ctrl+C para detener el servidor"
 echo ""
 echo "🔥 CARACTERÍSTICAS PRINCIPALES:"
-echo "  • 8 etapas de preprocesamiento avanzado"
+echo "  • Sistema de preprocesamiento avanzado"
 echo "  • Estadísticas detalladas con gráficos"
 echo "  • Análisis facial y colorimetría"
 echo "  • Recomendaciones de outfit inteligentes"
@@ -84,4 +84,4 @@ sleep 2
 
 # Iniciar servidor Django
 echo "🚀 Iniciando servidor Django..."
-python manage.py runserver 0.0.0.0:8000
+python3 manage.py runserver 0.0.0.0:8000
